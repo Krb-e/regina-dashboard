@@ -539,7 +539,7 @@ function render(c,p,D){
 
   const ads={};
   D.metaCur.forEach(x=>{const k=x.ad_image_url||x.ad_creative_body||x.campaign_name||'(s/img)';const a=ads[k]=ads[k]||{img:x.ad_image_url,copy:'',impr:0,spend:0,lpv:0,pur:0,val:0,v3:0,v100:0};if(!a.copy&&x.ad_creative_body)a.copy=x.ad_creative_body;a.impr+=+x.impressions||0;a.spend+=+x.amount_spent||0;a.lpv+=+x.landing_page_views||0;a.pur+=+x.website_purchases||0;a.val+=+x.purchases_conv_value||0;a.v3+=+x.video_view_3s||0;a.v100+=+x.video_watch_100||0;});
-  const list=Object.values(ads).sort((a,b)=>b.val-a.val).slice(0,12);
+  const list=Object.values(ads).sort((a,b)=>b.val-a.val).slice(0,5);
   const tImpr=sum(D.metaCur,x=>x.impressions)||1;
   setTxt('stat-hook',pct(sum(D.metaCur,x=>x.video_view_3s)/tImpr*100));
   const cell=(l,v)=>'<div class="adm"><div class="l">'+l+'</div><div class="v">'+v+'</div></div>';
