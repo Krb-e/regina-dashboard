@@ -359,12 +359,12 @@ table.ke-t tfoot td:first-child{text-align:left;}
   <!-- Bloque 1 — KPIs -->
   <div class="ke-sec-head"><div class="ke-sec-line"></div><span class="ke-sec-label">KPIs de cuenta</span></div>
   <div class="ig-kpis">
-    <div class="ke-kc"><div class="ke-kl">Seguidores</div><div class="ke-kv" id="ig-followers">—</div><div class="ke-ks">Total de la cuenta</div></div>
-    <div class="ke-kc b"><div class="ke-kl">Alcance</div><div class="ke-kv b" id="ig-reach">—</div><div class="ke-ks">Cuentas alcanzadas</div></div>
-    <div class="ke-kc b"><div class="ke-kl">Reproducciones</div><div class="ke-kv b" id="ig-views">—</div><div class="ke-ks">Views de contenido</div></div>
-    <div class="ke-kc g"><div class="ke-kl">Interacciones</div><div class="ke-kv g" id="ig-inter">—</div><div class="ke-ks">Likes + coment. + guardados + comp.</div></div>
-    <div class="ke-kc p"><div class="ke-kl">Visitas al perfil</div><div class="ke-kv p" id="ig-profile">—</div><div class="ke-ks">Visitas al perfil</div></div>
-    <div class="ke-kc o"><div class="ke-kl">Clics en sitio web</div><div class="ke-kv o" id="ig-web">—</div><div class="ke-ks">Clics al sitio</div></div>
+    <div class="ke-kc"><div class="ke-kl">Seguidores</div><div class="ke-kv" id="ig-followers">—</div><div class="ke-ks" id="ig-ks-followers">Total de la cuenta</div></div>
+    <div class="ke-kc b"><div class="ke-kl">Alcance</div><div class="ke-kv b" id="ig-reach">—</div><div class="ke-ks" id="ig-ks-reach">Cuentas alcanzadas</div></div>
+    <div class="ke-kc b"><div class="ke-kl">Reproducciones</div><div class="ke-kv b" id="ig-views">—</div><div class="ke-ks" id="ig-ks-views">Views de contenido</div></div>
+    <div class="ke-kc g"><div class="ke-kl">Interacciones</div><div class="ke-kv g" id="ig-inter">—</div><div class="ke-ks" id="ig-ks-inter">Likes + coment. + guardados + comp.</div></div>
+    <div class="ke-kc p"><div class="ke-kl">Visitas al perfil</div><div class="ke-kv p" id="ig-profile">—</div><div class="ke-ks" id="ig-ks-profile">Visitas al perfil</div></div>
+    <div class="ke-kc o"><div class="ke-kl">Clics en sitio web</div><div class="ke-kv o" id="ig-web">—</div><div class="ke-ks" id="ig-ks-web">Clics al sitio</div></div>
   </div>
 
   <!-- Bloque 4 — Audiencia -->
@@ -798,19 +798,42 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
         datalabels:window.ChartDataLabels?{display:c=>c.datasetIndex===0,color:'#191919',font:{size:10,weight:700},
           formatter:(v,c)=>{const t=c.dataset.data.reduce((s,x)=>s+x,0);const p=t?v/t*100:0;return p>=6?Math.round(p)+'%':'';}}:{display:false}}}});
   }
+  function igPick(rows){
+    rows=rows||[];
+    const dated=rows.filter(r=>r&&r.fecha).slice().sort((a,b)=>a.fecha<b.fecha?1:-1);
+    if(!dated.length) return {cur:rows[0]||null,prev:null};
+    const cur=dated[0], curD=new Date(cur.fecha); let prev=null;
+    for(let k=1;k<dated.length;k++){ if((curD-new Date(dated[k].fecha))/86400000>=28){prev=dated[k];break;} }
+    if(!prev&&dated.length>1) prev=dated[dated.length-1];
+    return {cur,prev};
+  }
+  function igDelta(cur,prev){
+    cur=+cur; prev=+prev;
+    if(!isFinite(prev)||prev===0) return null;
+    const d=(cur-prev)/prev*100, up=d>=0;
+    return '<span class="delta '+(up?'up':'down')+'">'+(up?'\u25B2':'\u25BC')+' '+Math.abs(d).toFixed(1).replace('.',',')+'%</span> vs período ant.';
+  }
+  function igKs(id,cur,prev,fb){ const e=document.getElementById(id); if(!e)return; const dh=(prev==null||prev===false||prev===undefined)?null:igDelta(cur,prev); e.innerHTML=dh||fb; }
   async function igLoad(){
     try{
       const [life,daily,posts,demo]=await Promise.all([
-        igGet('regina_ig_account_lifetime','followers,media_count,follows'),
-        igGet('regina_ig_account_daily','account_reach,account_views,account_total_interactions,account_profile_views,account_website_clicks'),
+        igGet('regina_ig_account_lifetime','fecha,followers,media_count,follows'),
+        igGet('regina_ig_account_daily','fecha,account_reach,account_views,account_total_interactions,account_profile_views,account_website_clicks'),
         igGet('regina_ig_posts_media','thumbnail_url,permalink,date_published,media_product_type,caption,reach,views,total_interactions,likes,comments,saved,shares,follows_from_post'),
         igGet('regina_ig_demographics','age,gender,follower_demographics_count')
       ]);
-      const L=life[0]||{}, D=daily[0]||{};
+      const LP=igPick(life), DP=igPick(daily);
+      const L=LP.cur||{}, Lp=LP.prev, D=DP.cur||{}, Dp=DP.prev;
       igSet('ig-followers',igInt(L.followers)); igSet('ig-stat-foll',igInt(L.followers));
       igSet('ig-reach',igInt(D.account_reach)); igSet('ig-views',igInt(D.account_views));
       igSet('ig-inter',igInt(D.account_total_interactions));
       igSet('ig-profile',igInt(D.account_profile_views)); igSet('ig-web',igInt(D.account_website_clicks));
+      igKs('ig-ks-followers',L.followers,Lp&&Lp.followers,'Total de la cuenta');
+      igKs('ig-ks-reach',D.account_reach,Dp&&Dp.account_reach,'Cuentas alcanzadas');
+      igKs('ig-ks-views',D.account_views,Dp&&Dp.account_views,'Views de contenido');
+      igKs('ig-ks-inter',D.account_total_interactions,Dp&&Dp.account_total_interactions,'Likes + coment. + guardados + comp.');
+      igKs('ig-ks-profile',D.account_profile_views,Dp&&Dp.account_profile_views,'Visitas al perfil');
+      igKs('ig-ks-web',D.account_website_clicks,Dp&&Dp.account_website_clicks,'Clics al sitio');
 
       const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
       const fdate=s=>{if(!s)return '—';const d=new Date(s);return isNaN(d)?'—':(d.getDate()+' '+MES[d.getMonth()]);};
