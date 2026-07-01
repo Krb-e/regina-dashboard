@@ -216,6 +216,7 @@ table.ke-t tfoot td:first-child{text-align:left;}
   <span class="tb-lbl">Período</span>
   <div class="tb-pills">
     <button class="tb-pill active" onclick="preset('mtd',this)">Mes en curso</button>
+    <button class="tb-pill" onclick="preset('prev',this)">Mes anterior</button>
     
     
   </div>
@@ -579,13 +580,15 @@ function labelRange(){
   document.querySelectorAll('.dateauto').forEach(e=>e.textContent=txt);
   const cf=document.getElementById('cFrom'),ct=document.getElementById('cTo'); if(cf)cf.value=iso(s); if(ct)ct.value=iso(t);
 }
-function setRange(from,to){state.from=from;state.to=to;labelRange();loadData();loadEmail();}
+function setRange(from,to){state.from=from;state.to=to;labelRange();loadData();loadEmail();if(window.__igReload)window.__igReload();}
 function preset(r,el){
   document.querySelectorAll('.tb-pill').forEach(p=>p.classList.remove('active')); if(el)el.classList.add('active');
   const now=new Date(),y=addDays(now,-1);
-  let from;
-  if(r==='mtd'){from=new Date(now.getFullYear(),now.getMonth(),1);}else{from=addDays(y,-(parseInt(r)-1));}
-  setRange(from,(y<from)?new Date(from):y);
+  let from,to=y;
+  if(r==='mtd'){from=new Date(now.getFullYear(),now.getMonth(),1);}
+  else if(r==='prev'){from=new Date(now.getFullYear(),now.getMonth()-1,1);to=new Date(now.getFullYear(),now.getMonth(),0);}
+  else{from=addDays(y,-(parseInt(r)-1));}
+  setRange(from,(to<from)?new Date(from):to);
 }
 function applyCustom(){
   const f=document.getElementById('cFrom').value,t=document.getElementById('cTo').value;
@@ -839,7 +842,8 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
       const fdate=s=>{if(!s)return '—';const d=new Date(s);return isNaN(d)?'—':(d.getDate()+' '+MES[d.getMonth()]);};
       const tipo={AD:'Ad',FEED:'Feed',REELS:'Reel',STORY:'Story',CAROUSEL_ALBUM:'Carrusel',VIDEO:'Video',IMAGE:'Imagen'};
       const _now=new Date(), _mStart=new Date(_now.getFullYear(),_now.getMonth(),1);
-      const monthly=posts.filter(p=>{const d=new Date(p.date_published);return !isNaN(d)&&d>=_mStart;});
+      const _pf=(state&&state.from)||_mStart, _pt=(state&&state.to)?new Date(state.to.getFullYear(),state.to.getMonth(),state.to.getDate(),23,59,59):_now;
+      const monthly=posts.filter(p=>{const d=new Date(p.date_published);return !isNaN(d)&&d>=_pf&&d<=_pt;});
       monthly.sort((a,b)=>(+b.total_interactions||0)-(+a.total_interactions||0));
       const top=monthly.slice(0,5);
       const rowsHTML=top.map(p=>{
@@ -855,8 +859,8 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
           +'<td>'+igInt(p.likes)+'</td><td>'+igInt(p.comments)+'</td><td>'+igInt(p.saved)+'</td>'
           +'<td>'+igInt(p.shares)+'</td><td>'+igInt(p.follows_from_post)+'</td></tr>';
       }).join('');
-      document.getElementById('ig-tbody').innerHTML=rowsHTML||'<tr><td colspan="12" class="ke-pg-sub">Sin publicaciones este mes.</td></tr>';
-      igSet('ig-stat-posts','Top '+top.length+' del mes');
+      document.getElementById('ig-tbody').innerHTML=rowsHTML||'<tr><td colspan="12" class="ke-pg-sub">Sin publicaciones en el período.</td></tr>';
+      igSet('ig-stat-posts','Top '+top.length+' del período');
 
       const ages=['13-17','18-24','25-34','35-44','45-54','55-64','65+'];
       const byAge=ages.map(a=>demo.filter(d=>d.age===a).reduce((s,d)=>s+(+d.follower_demographics_count||0),0));
@@ -875,6 +879,7 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
       const el=document.getElementById('ig-err'); if(el)el.textContent='⚠️ Error cargando Social Media: '+e.message;
     }
   }
+  window.__igReload=igLoad;
   if(document.readyState!=='loading') igLoad();
   else document.addEventListener('DOMContentLoaded',igLoad);
 })();
