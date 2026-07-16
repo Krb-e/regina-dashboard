@@ -384,6 +384,7 @@ table.ke-t tfoot td:first-child{text-align:left;}
   <div id="ml-err" class="ke-pg-sub" style="margin-top:10px"></div>
 </section>
 
+
 <section id="p1" class="ke-page">
   <div class="ke-pg-header">
     <div>
@@ -466,7 +467,27 @@ table.ke-t tfoot td:first-child{text-align:left;}
     </table>
   </div>
 
-  <div class="ke-sec-head"><div class="ke-sec-line"></div><span class="ke-sec-label">Conclusiones &amp; accionables · Email Marketing</span></div>
+  <div class="ke-sec-head"><div class="ke-sec-line g"></div><span class="ke-sec-label">Conversiones &amp; facturación · Campañas</span><span class="ke-goal-mes">atribución Perfit</span></div>
+  <div class="ke-grid-4">
+    <div class="ke-kc g"><div class="ke-kl">Facturación email</div><div id="emx-camp-rev" class="ke-kv g">—</div><div id="emx-camp-rev-s" class="ke-ks"></div></div>
+    <div class="ke-kc"><div class="ke-kl">Conversiones</div><div id="emx-camp-conv" class="ke-kv">—</div><div id="emx-camp-conv-s" class="ke-ks"></div></div>
+    <div class="ke-kc"><div class="ke-kl">Tasa de conversión</div><div id="emx-camp-cr" class="ke-kv">—</div><div class="ke-ks">conv / entregados</div></div>
+    <div class="ke-kc"><div class="ke-kl">Ticket promedio</div><div id="emx-camp-ticket" class="ke-kv">—</div><div class="ke-ks">facturación / conv</div></div>
+  </div>
+
+  <div class="ke-sec-head"><div class="ke-sec-line b"></div><span class="ke-sec-label">Automatizaciones · Perfit</span><span class="ke-goal-mes">Snapshot · flujos activos, acumulado</span></div>
+  <div class="ke-grid-4">
+    <div class="ke-kc b"><div class="ke-kl">Flujos activos</div><div id="emx-auto-count" class="ke-kv b">—</div><div class="ke-ks">automatizaciones on</div></div>
+    <div class="ke-kc g"><div class="ke-kl">Facturación automatizaciones</div><div id="emx-auto-rev" class="ke-kv g">—</div><div id="emx-auto-rev-s" class="ke-ks"></div></div>
+    <div class="ke-kc"><div class="ke-kl">Conversiones</div><div id="emx-auto-conv" class="ke-kv">—</div><div class="ke-ks">compras atribuidas</div></div>
+    <div class="ke-kc"><div class="ke-kl">Envíos</div><div id="emx-auto-sent" class="ke-kv">—</div><div class="ke-ks">totales</div></div>
+  </div>
+  <div class="ke-block"><div class="ke-block-top"></div>
+    <div class="ke-bh"><span class="ke-bt">Detalle por automatización · por facturación</span></div>
+    <table class="ke-t" id="emx-auto-table"><thead><tr><th>Automatización</th><th>Tipo</th><th>Envíos</th><th class="acc">Open rate</th><th>Click rate</th><th class="acc">Conversiones</th><th class="acc">Facturación</th></tr></thead><tbody><tr><td>Cargando…</td></tr></tbody></table>
+  </div>
+
+<div class="ke-sec-head"><div class="ke-sec-line"></div><span class="ke-sec-label">Conclusiones &amp; accionables · Email Marketing</span></div>
   <div id="insights-em" class="ke-ins-wrap"><div class="ke-pg-sub">Cargando…</div></div>
 </section>
 
@@ -740,7 +761,7 @@ function labelRange(){
   document.querySelectorAll('.dateauto').forEach(e=>e.textContent=txt);
   const cf=document.getElementById('cFrom'),ct=document.getElementById('cTo'); if(cf)cf.value=iso(s); if(ct)ct.value=iso(t);
 }
-function setRange(from,to){state.from=from;state.to=to;labelRange();loadData();loadEmail();if(window.__igReload)window.__igReload();if(window.__mlReload)window.__mlReload();}
+function setRange(from,to){state.from=from;state.to=to;labelRange();loadData();loadEmail();if(window.__igReload)window.__igReload();if(window.__mlReload)window.__mlReload();if(window.__emxReload)window.__emxReload();}
 function preset(r,el){
   document.querySelectorAll('.tb-pill').forEach(p=>p.classList.remove('active')); if(el)el.classList.add('active');
   const now=new Date(),y=addDays(now,-1);
@@ -1166,7 +1187,7 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
     if(typeof state==='undefined'||!state.from)return;
     try{
       const Sc=iso(state.from),Ec=iso(state.to);
-      const {pFrom,pTo}=periods();const Sp=iso(pFrom),Ep=iso(pTo);/*meli*/
+      const {pFrom,pTo}=periods();const Sp=iso(pFrom),Ep=iso(pTo);
       const [prod,disp,orders,cuentaArr,items]=await Promise.all([
         fetchTbl('regina_mercado_ads','fecha,cost,total_amount,units_quantity,clicks,impressions','fecha',Sp,Ec),
         fetchTbl('regina_mercado_ads_display','fecha,cost,impressions','fecha',Sp,Ec),
@@ -1179,17 +1200,14 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
       const prodC=fc(prod,'fecha'),prodP=fp(prod,'fecha'),dispC=fc(disp,'fecha'),dispP=fp(disp,'fecha');
       const paid=orders.filter(o=>(o.order_status||'')==='paid');
       const ordC=fc(paid,'order_date_created'),ordP=fp(paid,'order_date_created');
-      // ADS
       const pcost=S(prodC.map(r=>r.cost)),pfact=S(prodC.map(r=>r.total_amount)),dcost=S(dispC.map(r=>r.cost));
       const inv=pcost+dcost,units=S(prodC.map(r=>r.units_quantity)),clicks=S(prodC.map(r=>r.clicks)),impr=S(prodC.map(r=>r.impressions)),dimpr=S(dispC.map(r=>r.impressions));
       const acos=pfact?pcost/pfact*100:0,roas=pcost?pfact/pcost:0,cpc=clicks?pcost/clicks:0,ctr=impr?clicks/impr*100:0;
       const pcostP=S(prodP.map(r=>r.cost)),pfactP=S(prodP.map(r=>r.total_amount)),dcostP=S(dispP.map(r=>r.cost)),invP=pcostP+dcostP;
-      // ML
       const gross=S(ordC.map(o=>o.order_total_amount)),fee=S(ordC.map(o=>o.order_total_sale_fee)),ship=S(ordC.map(o=>o.order_shipping_cost)),coup=S(ordC.map(o=>o.order_coupon_amount));
       const net=gross-fee-ship-coup,nOrd=ordC.length,ticket=nOrd?gross/nOrd:0,mlUnits=S(ordC.map(o=>o.order_total_quantity)),feePct=gross?fee/gross*100:0,rent=net-inv;
       const grossP=S(ordP.map(o=>o.order_total_amount)),feeP=S(ordP.map(o=>o.order_total_sale_fee)),shipP=S(ordP.map(o=>o.order_shipping_cost)),coupP=S(ordP.map(o=>o.order_coupon_amount)),netP=grossP-feeP-shipP-coupP,nOrdP=ordP.length;
       const tacos=gross?inv/gross*100:0,tacosP=grossP?invP/grossP*100:0;
-      // hero + ADS
       if(q('ml-hero'))q('ml-hero').textContent=pctv(tacos);
       setK('ml-inv',moneyK(inv),'ml-inv-s',dlt(inv,invP,false));
       const acosCls=acos<=15?'g':acos<=30?'o':'r';const kvA=q('ml-acos');if(kvA){kvA.className='ke-kv '+acosCls;kvA.textContent=pctv(acos);}
@@ -1198,7 +1216,6 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
       setK('ml-adsfact',moneyK(pfact),'ml-adsfact-s',dlt(pfact,pfactP,false));
       setK('ml-tacos',pctv(tacos),'ml-tacos-s',dlt(tacos,tacosP,true));
       setK('ml-adsunits',intv(units));setK('ml-cpc',money(cpc));setK('ml-ctr',pct2(ctr));setK('ml-dispinv',moneyK(dcost));setK('ml-dispimpr',intv(dimpr));
-      // ML cards
       setK('ml-gross',moneyK(gross),'ml-gross-s',dlt(gross,grossP,false));
       setK('ml-fee',moneyK(fee),'ml-fee-s',pctv(feePct)+' efectivo');
       setK('ml-net',moneyK(net),'ml-net-s',dlt(net,netP,false));
@@ -1206,7 +1223,6 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
       setK('ml-ticket',money(ticket));
       setK('ml-units',intv(mlUnits));setK('ml-ship',moneyK(ship));setK('ml-coup',moneyK(coup));
       setK('ml-rent',moneyK(rent));setK('ml-feepct',pctv(feePct));
-      // snapshot cuenta
       const c=cuentaArr[0]||{};
       const rl=(c.reputation_level||'').split('_');
       const lvlMap={red:1,orange:2,yellow:3,light:4,green:5};
@@ -1225,7 +1241,6 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
       setK('ml-delay',pctv(parseFloat(c.delayed_handling_time_rate)||0));
       const act=items.filter(i=>(i.item_status||'')==='active').length,tot=items.length,hlth=tot?S(items.map(i=>i.item_health))/tot:0;
       setK('ml-itemsact',act+'/'+tot,'ml-itemsact-s','salud prom. '+hlth.toFixed(2).replace('.',','));
-      // charts
       const daysArr=[];{let d=new Date(state.from);while(d<=state.to){daysArr.push(iso(d));d=addDays(d,1);}}
       const lbl=daysArr.map(d=>{const x=new Date(d+'T00:00:00');return x.getDate()+'/'+(x.getMonth()+1);});
       const ac=daySum(prodC,'fecha',r=>r.cost),ad=daySum(dispC,'fecha',r=>r.cost),af=daySum(prodC,'fecha',r=>r.total_amount);
@@ -1254,5 +1269,55 @@ window.addEventListener('resize',()=>{const m=isMobile();if(m!==_mob){_mob=m;if(
   if(document.readyState!=='loading')boot();else document.addEventListener('DOMContentLoaded',boot);
 })();
 </script>
+
+<script>
+(function(){
+  const q=id=>document.getElementById(id);
+  const S=a=>a.reduce((s,x)=>s+(parseFloat(x)||0),0);
+  const moneyK=v=>Math.abs(v)>=1e6?'$'+(v/1e6).toFixed(2).replace('.',',')+'M':Math.abs(v)>=1e3?'$'+Math.round(v/1e3)+'k':'$'+Math.round(v);
+  const money=v=>'$'+Math.round(v).toLocaleString('es-AR');
+  const pctv=v=>(isFinite(v)?v.toFixed(1).replace('.',','):'0,0')+'%';
+  const intv=v=>Math.round(v).toLocaleString('es-AR');
+  const esc=v=>String(v==null?'':v).replace(/</g,'&lt;');
+  const setk=(id,v)=>{const e=q(id);if(e)e.innerHTML=v;};
+  async function fetchTbl(table,cols,dateCol,from,to,extra){
+    const headers={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};
+    let out=[],off=0;const pg=1000;
+    for(;;){let url=SUPABASE_URL+'/rest/v1/'+table+'?select='+cols+'&limit='+pg+'&offset='+off;
+      if(dateCol&&from&&to)url+='&'+dateCol+'=gte.'+from+'&'+dateCol+'=lte.'+to;
+      if(extra)url+=extra;
+      const r=await fetch(url,{headers});if(!r.ok)throw new Error(table+' '+r.status);
+      const rows=await r.json();out=out.concat(rows);if(rows.length<pg)break;off+=pg;}
+    return out;
+  }
+  async function emxLoad(){
+    if(typeof state==='undefined'||!state.from)return;
+    try{
+      const Sc=iso(state.from),Ec=iso(state.to);
+      const camp=await fetchTbl('regina_email_marketing','date,delivered,conversions,conversions_amount','date',Sc,Ec);
+      const conv=S(camp.map(r=>r.conversions)),rev=S(camp.map(r=>r.conversions_amount)),deliv=S(camp.map(r=>r.delivered));
+      setk('emx-camp-rev',moneyK(rev));setk('emx-camp-rev-s',intv(camp.length)+' campañas');
+      setk('emx-camp-conv',intv(conv));setk('emx-camp-conv-s','compras atribuidas');
+      setk('emx-camp-cr',deliv?pctv(conv/deliv*100):'—');
+      setk('emx-camp-ticket',conv?money(rev/conv):'—');
+      const auto=await fetchTbl('regina_perfit_automations','fecha,automation_name,automation_types,automation_enabled,sent,open_rate,click_rate,conversions,conversions_amount',null,null,null,'&order=fecha.desc&limit=500');
+      const lastF=auto.length?auto[0].fecha:null;
+      const rows=auto.filter(a=>a.fecha===lastF);
+      const activos=rows.filter(a=>a.automation_enabled===true||a.automation_enabled==='true').length;
+      setk('emx-auto-count',intv(activos));
+      setk('emx-auto-rev',moneyK(S(rows.map(a=>a.conversions_amount))));setk('emx-auto-rev-s','acumulado · '+(lastF||''));
+      setk('emx-auto-conv',intv(S(rows.map(a=>a.conversions))));
+      setk('emx-auto-sent',intv(S(rows.map(a=>a.sent))));
+      const sorted=rows.slice().sort((a,b)=>(parseFloat(b.conversions_amount)||0)-(parseFloat(a.conversions_amount)||0)).slice(0,12);
+      const el=q('emx-auto-table'),tb=el?el.querySelector('tbody'):null;
+      if(tb)tb.innerHTML=(sorted.map(a=>'<tr><td style="color:var(--ke-text);font-weight:500">'+esc(a.automation_name)+'</td><td style="color:var(--ke-muted);font-size:12px">'+esc((a.automation_types||'').split(',')[0])+'</td><td>'+intv(a.sent)+'</td><td>'+pctv(parseFloat(a.open_rate)||0)+'</td><td>'+pctv(parseFloat(a.click_rate)||0)+'</td><td>'+intv(a.conversions)+'</td><td>'+moneyK(parseFloat(a.conversions_amount)||0)+'</td></tr>').join(''))||'<tr><td>Sin datos</td></tr>';
+    }catch(e){console.error(e);}
+  }
+  window.__emxReload=emxLoad;
+  function boot(){if(typeof state==='undefined'||!state.from){return setTimeout(boot,150);}emxLoad();}
+  if(document.readyState!=='loading')boot();else document.addEventListener('DOMContentLoaded',boot);
+})();
+</script>
+
 </body>
 </html>
