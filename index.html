@@ -109,6 +109,7 @@ table.ke-t tfoot td:first-child{text-align:left;}
 .ke-2col{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;align-items:start;}
 .ke-chartbox{position:relative;height:300px;}
 .ke-chartbox.sm{height:260px;}
+.ke-chartbox.users{height:242px;}  /* 41 (header) + 36 (padding) + 242 = 319 = alto de la tarjeta del donut */
 .ke-sec-head{display:flex;align-items:center;gap:10px;margin:28px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--ke-border);}
 .ke-sec-line{width:20px;height:2px;background:var(--ke-orange);border-radius:999px;}
 .ke-sec-label{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ke-muted);flex:1;}
@@ -145,7 +146,8 @@ table.ke-t tfoot td:first-child{text-align:left;}
 .donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
 .legend-tr{display:flex;align-items:center;gap:8px;font-size:11px;padding:3px 0;color:rgba(230,230,230,.82);}
 .legend-tr .dot{width:9px;height:9px;border-radius:50%;flex:none;}
-.legend-tr .pct{margin-left:auto;color:var(--ke-text);}
+.legend-tr .pct{margin-left:auto;color:var(--ke-text);padding-left:8px;}
+.legend-tr .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 @media(max-width:900px){.ke-grid-5{grid-template-columns:repeat(2,1fr);}.ke-2col{grid-template-columns:1fr;}.adgrid-m{grid-template-columns:repeat(2,1fr);}.adcard{flex-direction:column;}}
 .srclogo{height:20px;width:auto;margin-left:12px;vertical-align:middle;opacity:.85;}
 
@@ -247,6 +249,8 @@ table.ke-t tfoot td:first-child{text-align:left;}
   <div class="tb-pills">
     <button class="tb-pill active" onclick="preset('mtd',this)">Mes en curso</button>
     <button class="tb-pill" onclick="preset('prev',this)">Mes anterior</button>
+    <button class="tb-pill" onclick="preset('7',this)">Últimos 7 días</button>
+    <button class="tb-pill" onclick="preset('14',this)">Últimos 14 días</button>
     
     
   </div>
@@ -269,9 +273,9 @@ table.ke-t tfoot td:first-child{text-align:left;}
 <section id="p0" class="ke-page active">
   <div class="ke-pg-header">
     <div>
-      <div class="ke-eyebrow">Resumen general · mes en curso</div>
+      <div class="ke-eyebrow">Resumen general · <span class="presetauto">mes en curso</span></div>
       <div class="ke-pg-title">OVER<span>VIEW</span></div>
-      <div class="ke-pg-sub">Regina Cosmetics · <span class="dateauto"></span> · comparado vs. mismo período del mes anterior</div>
+      <div class="ke-pg-sub">Regina Cosmetics · <span class="dateauto"></span> · comparado vs. período anterior de igual duración</div>
     </div>
     <div class="ke-pg-stat"><div id="stat-ov-ov" class="ke-pg-stat-val">—</div><div class="ke-pg-stat-lbl">ACOS general</div></div>
   </div>
@@ -296,17 +300,17 @@ table.ke-t tfoot td:first-child{text-align:left;}
   <div class="ke-2col">
     <div class="ke-block"><div class="ke-block-top"></div>
       <div class="ke-bh"><span class="ke-bt">Distribución de usuarios por fuente</span></div>
-      <div style="display:flex;gap:18px;align-items:center;padding:6px 4px;">
-        <div class="donut-wrap" style="width:240px;height:240px;flex:none;">
+      <div style="display:flex;gap:22px;align-items:center;padding:14px 6px;">
+        <div class="donut-wrap" style="width:250px;height:250px;flex:none;">
           <canvas id="cUsers"></canvas>
           <div class="donut-center"><div id="users-total" class="ke-kv" style="font-size:24px;">—</div><div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ke-muted);">usuarios</div><div id="users-delta" class="ke-ks" style="margin-top:4px;"></div></div>
         </div>
-        <div id="users-legend" style="flex:1;min-width:0;"></div>
+        <div id="users-legend" style="flex:1;min-width:0;padding:0 22px 0 2px;"></div>
       </div>
     </div>
     <div class="ke-block"><div class="ke-block-top"></div>
       <div class="ke-bh"><span class="ke-bt">Evolución diaria de usuarios</span></div>
-      <div class="ke-bbody"><div class="ke-chartbox"><canvas id="cUsersDia"></canvas></div></div>
+      <div class="ke-bbody"><div class="ke-chartbox users"><canvas id="cUsersDia"></canvas></div></div>
     </div>
   </div>
 
@@ -387,9 +391,9 @@ table.ke-t tfoot td:first-child{text-align:left;}
 <section id="p1" class="ke-page">
   <div class="ke-pg-header">
     <div>
-      <div class="ke-eyebrow">Pauta · mes en curso</div>
+      <div class="ke-eyebrow">Pauta · <span class="presetauto">mes en curso</span></div>
       <div class="ke-pg-title">PAID <span>MEDIA</span></div>
-      <div class="ke-pg-sub">Regina Cosmetics · <span class="dateauto"></span> · comparado vs. mismo período del mes anterior</div>
+      <div class="ke-pg-sub">Regina Cosmetics · <span class="dateauto"></span> · comparado vs. período anterior de igual duración</div>
     </div>
     <div class="ke-pg-stat"><div id="stat-ov" class="ke-pg-stat-val">—</div><div class="ke-pg-stat-lbl">ACOS general</div></div>
   </div>
@@ -603,17 +607,24 @@ function isMobile(){return window.matchMedia('(max-width:560px)').matches;}
 function moneyKpi(v){return isMobile()?moneyC(v):money(v);}
 function pct(v){return (v||0).toFixed(1).replace('.',',')+'%';}
 function fmtInt(v){return nf.format(Math.round(v||0));}
+function escH(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function sum(a,f){return a.reduce((s,x)=>s+(parseFloat(f(x))||0),0);}
 function setTxt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
 function setHTML(id,v){const e=document.getElementById(id);if(e)e.innerHTML=v;}
 const between=(d,a,b)=>d>=a&&d<=b;
 const addDays=(base,i)=>{const d=new Date(base);d.setDate(d.getDate()+i);return d;};
+/* Normalizar a medianoche antes de restar fechas: si no, (to-from)/86400000 arrastra
+   la hora actual y Math.round() suma un dia de mas a partir del mediodia (dia
+   fantasma en 0 y ventana de comparacion de N+1 dias). */
+const atMidnight=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const dayDiff=(a,b)=>Math.round((atMidnight(b)-atMidnight(a))/86400000);
 
-const state={from:null,to:null};
-(function initDefault(){const now=new Date();const y=addDays(now,-1);state.from=new Date(now.getFullYear(),now.getMonth(),1);state.to=(y<state.from)?new Date(state.from):y;})();
+const state={from:null,to:null,preset:'mtd'};
+const PRESET_LBL={mtd:'mes en curso',prev:'mes anterior','7':'últimos 7 días','14':'últimos 14 días'};
+(function initDefault(){const now=new Date();const y=atMidnight(addDays(now,-1));state.from=new Date(now.getFullYear(),now.getMonth(),1);state.to=(y<state.from)?new Date(state.from):y;})();
 
 function periods(){
-  const len=Math.round((state.to-state.from)/86400000)+1;
+  const len=dayDiff(state.from,state.to)+1;
   const pTo=addDays(state.from,-1), pFrom=addDays(pTo,-(len-1));
   return {len,pFrom,pTo};
 }
@@ -671,7 +682,7 @@ function render(c,p,D){
   _last={c,p,D};
   setTxt('kv-fact',moneyKpi(c.facturacion)); setHTML('ks-fact',deltaHTML(c.facturacion,p.facturacion,false));
   setTxt('kv-ticket',moneyKpi(c.ticket)); setHTML('ks-ticket',deltaHTML(c.ticket,p.ticket,false));
-  setTxt('kv-conv',pct(c.conv)); setHTML('ks-conv',deltaHTML(c.conv,p.conv,false));
+  setTxt('kv-conv',pctN(c.conv,2)); setHTML('ks-conv',deltaHTML(c.conv,p.conv,false));
   setTxt('kv-ord',fmtInt(c.ordenes)); setHTML('ks-ord',deltaHTML(c.ordenes,p.ordenes,false));
   setTxt('kv-mspend',moneyKpi(c.mS)); setHTML('ks-mspend',deltaHTML(c.mS,p.mS,false));
   setTxt('kv-mcosto',moneyKpi(c.mCosto)); setHTML('ks-mcosto',deltaHTML(c.mCosto,p.mCosto,true));
@@ -686,7 +697,7 @@ function render(c,p,D){
   setTxt('stat-ov',pct(c.acosGeneral));
   setTxt('stat-ov-ov',pct(c.acosGeneral));
 
-  const N=Math.round((state.to-state.from)/86400000)+1;
+  const N=dayDiff(state.from,state.to)+1;
   const lab=[],fdata=[];
   const fac={}; D.ordersCur.filter(o=>(o.order_payment_status||'').toLowerCase()==='paid').forEach(o=>{fac[o.date]=(fac[o.date]||0)+(parseFloat(o.order_total_paid)||0);});
   for(let i=0;i<N;i++){const d=addDays(state.from,i);lab.push(d.getDate()+'/'+(d.getMonth()+1));fdata.push(fac[iso(d)]||0);}
@@ -697,7 +708,7 @@ function render(c,p,D){
   const top=arr.slice(0,7); const otros=arr.slice(7).reduce((s,x)=>s+x.v,0); if(otros>0) top.push({k:'Otros',v:otros});
   setTxt('users-total',fmtInt(c.users)); setHTML('users-delta',deltaHTML(c.users,p.users,false));
   mkDonut('cUsers',top.map(x=>x.k),top.map(x=>x.v));
-  setHTML('users-legend',top.map((x,i)=>'<div class="legend-tr"><span class="dot" style="background:'+PAL[i%PAL.length]+'"></span>'+x.k+'<span class="pct">'+(c.users?(x.v/c.users*100):0).toFixed(1).replace('.',',')+'%</span></div>').join(''));
+  setHTML('users-legend',top.map((x,i)=>'<div class="legend-tr"><span class="dot" style="background:'+PAL[i%PAL.length]+'"></span><span class="nm" title="'+escH(x.k)+'">'+escH(x.k)+'</span><span class="pct">'+(c.users?(x.v/c.users*100):0).toFixed(2).replace('.',',')+'%</span></div>').join(''));
 
   const cu={},pu={};
   D.ga4cur.forEach(x=>{cu[x.date]=(cu[x.date]||0)+(+x.total_users||0);});
@@ -707,7 +718,7 @@ function render(c,p,D){
   mkLine('cUsersDia',lab,[
     {label:'Actual',data:cur2,borderColor:ORANGE,fill:false,tension:.3,pointRadius:N>45?0:2,borderWidth:2},
     {label:'Período anterior',data:prev2,borderColor:BEIGE,fill:false,tension:.3,pointRadius:N>45?0:2,borderWidth:2,borderDash:[4,4]}
-  ],true);
+  ],true,true);
 
   const ads={};
   D.metaCur.forEach(x=>{const k=x.ad_image_url||x.ad_creative_body||x.campaign_name||'(s/img)';const a=ads[k]=ads[k]||{img:x.ad_image_url,copy:'',impr:0,spend:0,lpv:0,pur:0,val:0,v3:0,v100:0};if(!a.copy&&x.ad_creative_body)a.copy=x.ad_creative_body;a.impr+=+x.impressions||0;a.spend+=+x.amount_spent||0;a.lpv+=+x.landing_page_views||0;a.pur+=+x.website_purchases||0;a.val+=+x.purchases_conv_value||0;a.v3+=+x.video_view_3s||0;a.v100+=+x.video_watch_100||0;});
@@ -725,9 +736,23 @@ function render(c,p,D){
       '</div></div></div>';
   }).join('')||'<div class="ke-pg-sub">Sin anuncios en el período.</div>';
 }
-function mkLine(id,labels,datasets,legend){
+/* Paso "lindo" para que el eje Y cierre en 3 divisiones redondas en vez de dejar que
+   Chart.js elija la escala: la serie ocupa el tercio inferior y se lee la variacion. */
+function pasoRedondo(max){
+  if(!isFinite(max)||max<=0) return 1;
+  const bruto=max/3, exp=Math.pow(10,Math.floor(Math.log10(bruto)));
+  for(const m of [1,1.5,2,3,5,7.5,10]){ if(m*exp>=bruto) return m*exp; }
+  return 10*exp;
+}
+function mkLine(id,labels,datasets,legend,ejeEn3){
   const el=document.getElementById(id); if(!el)return; if(charts[id])charts[id].destroy();
-  charts[id]=new Chart(el,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:legend,labels:{boxWidth:12,font:{size:11}}},datalabels:{display:false}},scales:{x:{grid:{color:GRID}},y:{grid:{color:GRID},beginAtZero:true}}}});
+  const y={grid:{color:GRID},beginAtZero:true};
+  if(ejeEn3){
+    const max=Math.max(0,...datasets.flatMap(d=>d.data.map(v=>+v||0)));
+    const p=pasoRedondo(max);
+    y.min=0; y.max=p*3; y.ticks={stepSize:p};
+  }
+  charts[id]=new Chart(el,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:legend,labels:{boxWidth:12,font:{size:11}}},datalabels:{display:false}},scales:{x:{grid:{color:GRID}},y}}});
 }
 function mkDonut(id,labels,data){
   const el=document.getElementById(id); if(!el)return; if(charts[id])charts[id].destroy();
@@ -752,15 +777,21 @@ function labelRange(){
   const np=document.getElementById('navPeriod'); if(np)np.textContent=txt;
   document.querySelectorAll('.dateauto').forEach(e=>e.textContent=txt);
   const cf=document.getElementById('cFrom'),ct=document.getElementById('cTo'); if(cf)cf.value=iso(s); if(ct)ct.value=iso(t);
+  const pl=PRESET_LBL[state.preset]||'período personalizado';
+  document.querySelectorAll('.presetauto').forEach(e=>e.textContent=pl);
 }
 function setRange(from,to){state.from=from;state.to=to;labelRange();loadData();loadEmail();if(window.__igReload)window.__igReload();if(window.__mlReload)window.__mlReload();}
 function preset(r,el){
   document.querySelectorAll('.tb-pill').forEach(p=>p.classList.remove('active')); if(el)el.classList.add('active');
-  const now=new Date(),y=addDays(now,-1);
+  const now=new Date(),y=atMidnight(addDays(now,-1));
   let from,to=y;
   if(r==='mtd'){from=new Date(now.getFullYear(),now.getMonth(),1);}
   else if(r==='prev'){from=new Date(now.getFullYear(),now.getMonth()-1,1);to=new Date(now.getFullYear(),now.getMonth(),0);}
+  /* Los presets numericos cuentan N dias terminando AYER, igual que el resto del
+     dashboard: el dia en curso esta incompleto y ensuciaria los deltas. periods()
+     arma sola la ventana de comparacion de la misma cantidad de dias. */
   else{from=addDays(y,-(parseInt(r)-1));}
+  state.preset=r;
   setRange(from,(to<from)?new Date(from):to);
 }
 function applyCustom(){
@@ -769,6 +800,7 @@ function applyCustom(){
   const from=new Date(f+'T00:00:00'),to=new Date(t+'T00:00:00');
   if(from>to){alert('La fecha "desde" no puede ser posterior a "hasta".');return;}
   document.querySelectorAll('.tb-pill').forEach(p=>p.classList.remove('active'));
+  state.preset='custom';
   setRange(from,to);
 }
 function exportPDF(){
